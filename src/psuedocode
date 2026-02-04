@@ -1,0 +1,105 @@
+/*
+declare array of cards A,2,3,4,5,6,7,8,9,10,J,Q,K (do this X times for X decks for more randomness)
+   optional --  for realism, if a card is taken from the deck(s) remove from array to simulate removing cards from a physical deck
+
+
+int playerTotal
+int dealerTotal
+player hand array
+dealer hand array
+int bet amount
+int player wallet? // track the money they can play with
+
+add two random cards from card array t dealer then add two to player
+reveal (one) dealer card  + both (2) player cards print to terminal including total "Score" (and if there's an ace account for two totals)
+
+
+print to terminal asking if player wants to hit/stand
+
+scan for player input() // take a "H" for hit or "S" for stand or "D" for double down
+if hit
+    add one more card to player hand array
+    update/print new player total score (accounting for if they have an ace card)
+    if  player score > 21 player busts, loses game return to beginning
+    return to top of method scanning for next player input
+
+
+if double down
+    give player one more card
+    player bet = player bet *2
+    add one card to player hand
+    do the dealer reveal
+
+
+
+if stand
+
+   if dealer hand < 17
+        while(dealer score < 17)
+        add new random card to dealer hand array
+         }
+        if > 21 dealer bust and player wins
+            reset game
+
+        reveal new dealer score to player
+
+
+
+if dealer score == player score
+    print push/draw
+    \
+
+    reset game
+
+if player score > dealer score
+    print win
+    player wallet = player wallet + 2*player bet
+    reset game
+
+if dealer score > player score
+    player wallet = player wallet - player bet
+    print lost
+    reset game
+
+
+
+optional gameReset method() // incase you don't want to keep executing the program over again to play a new game
+
+    redeclare the deck of cards array
+    reset player/dealer score to zero
+
+
+
+
+jameskriston03@gmail.com
+James Kriston
+
+
+*/
+
+
+/*
+tests
+    test inputs for bets that arent an integer or are null
+        check if player wallet has enough for bet
+
+    test for player blackjack off first 2 cards
+    test for aces being dealt as a 1 or 11
+    test for cards being removed from arrays after being dealt
+    test for proper input of hit,stand,double
+    test for proper addition of player score while hitting
+    test for no change in score if player stands
+    test double down choice is only offered on first hit/stand rotation
+    test for only one card being dealt if doubling, and ensure the doubling of bet is correct
+    test for dealer only revealing one of their (2) intital cards to the player
+    test for dealer hitting until 17 or more
+    test for dealer automatically busting if >21
+    test for dealer score == player score
+        test player does not lose/gain money, stay same
+    test for player score > dealer score
+        player wallet gets 2 x bet amnt added
+    test for player score < dealer score
+        player wallet loses bet amount
+
+
+*/
