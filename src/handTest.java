@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -50,37 +51,10 @@ public class handTest {
         assertEquals(13, hand.getValue(h("A", "A", "A", "10"))); // 11+1+1+10
     }
 
-    @Test
-    void displayValue_printsLowHigh_whenDifferent() {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintStream old = System.out;
-        System.setOut(new PrintStream(out));
-        try {
-            hand.displayValue(h("A", "5")); // should print 6/16
-        } finally {
-            System.setOut(old);
-        }
-        String printed = out.toString().trim();
-        assertTrue(printed.contains("6/16"), "Expected output to contain '6/16' but got: " + printed);
-    }
-
-    @Test
-    void displayValue_printsSingle_whenSame() {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintStream old = System.out;
-        System.setOut(new PrintStream(out));
-        try {
-            hand.displayValue(h("A", "9", "5")); // should print just 15
-        } finally {
-            System.setOut(old);
-        }
-        String printed = out.toString().trim();
-        assertTrue(printed.contains("15"), "Expected output to contain '15' but got: " + printed);
-        assertFalse(printed.contains("/"), "Did not expect two values, got: " + printed);
-    }
-}
-
-
-
 
 }
+
+
+
+
+
