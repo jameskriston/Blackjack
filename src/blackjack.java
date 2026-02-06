@@ -12,12 +12,12 @@ public class blackjack {
     public static ArrayList<String> deck = Deck.makeDeck();
     public static Hand Hand = new Hand();
     public static boolean doubleFlag = true;
-
+    public static boolean playGame = true;
      static void main(String[] args) {
 
         System.out.println("Would you like to play blackjack? (Type Y to play, N to exit)");
 
-        while (true) {
+        while (playGame) {
             String input = scan.nextLine();
 
             if ("y".equalsIgnoreCase(input)) {
@@ -25,30 +25,37 @@ public class blackjack {
                 setupBet();
             } else if ("n".equalsIgnoreCase(input)) {
                 System.out.println("You entered No, exiting blackjack program.");
-                System.exit(0);
+                playGame = false;
             }
         }
+        return;
     }
 
     public static void setupBet() {
         if ( player.getBalance()<=0) {
-            System.out.println("You have $0 left, no more bets can be placed. Exiting program.");
-            System.exit(0);
+            System.out.println("You have $0 left, no more bets can be placed.");
+            playGame = false;
+            return;
         }
         int num;
         try {
             player.displayBalance();
             System.out.println("Enter your bet amount as an integer or enter X to exit.");
             while (true) {
+                if(!playGame){ return; }
                 String input = scan.nextLine();
 
                 if ("x".equalsIgnoreCase(input)) {
                     System.out.println("You entered X, exiting blackjack program.");
-                    System.exit(0);
+                    playGame = false;
+                    return;
                 }
                 num = Integer.parseInt(input);
                 if (num < 1 || num > player.getBalance()) {
                     System.out.println("You must enter an integer value of at least 1, and no more than " + player.getBalance());
+
+                    return;
+
                 }
                 if (num >= 1 && num <= player.getBalance()) {
                      player.placeBet(num);
@@ -58,6 +65,7 @@ public class blackjack {
 
         } catch (NumberFormatException e) {
             System.out.println("You must enter an integer value of at least 1, and no more than " + player.getBalance());
+
             setupBet();
         }
     }
@@ -179,6 +187,9 @@ public class blackjack {
         player.displayBalance();
         System.out.println("Would you like to play again? (Type Y to play, N to exit)");
         while (true) {
+
+            if(!playGame){ return; }
+
             String input = scan.nextLine();
 
             if ("y".equalsIgnoreCase(input)) {
@@ -186,7 +197,7 @@ public class blackjack {
                 setupBet();
             } else if ("n".equalsIgnoreCase(input)) {
                 System.out.println("You entered No, exiting blackjack program.");
-                System.exit(0);
+                playGame = false;
             }
         }
     }

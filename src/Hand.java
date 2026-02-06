@@ -1,8 +1,5 @@
 import java.util.ArrayList;
-
-
 public class Hand {
-
 
     public int getValue(ArrayList<String> hand){
         int total = 0;
