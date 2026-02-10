@@ -1,20 +1,15 @@
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class playerTest {
+public class PlayerTest {
     private Hand hand;
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private PrintStream originalOut;
@@ -71,11 +66,22 @@ public class playerTest {
         assertEquals(200,player.bet);
     }
     @Test
-    void updateWinnings_Test(){
+    void win_push_lose_Test(){
         Player player = new Player(1000);
+
         player.placeBet(1000);
-        player.updateWinnings();
-        assertEquals(2000,player.balance);
+        assertEquals(1000, player.getBet());
+
+        player.win();
+        assertEquals(2000,player.getBalance());
+
+        player.placeBet(100);
+        player.push();
+        assertEquals(2000,player.getBalance());
+
+        player.placeBet(1000);
+        player.bet = 0;
+        assertEquals(1000, player.getBalance());
     }
 
 

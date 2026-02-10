@@ -1,22 +1,16 @@
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class handTest {
+public class HandTest {
     private Hand hand;
     private final ByteArrayOutputStream out = new ByteArrayOutputStream();
     private PrintStream originalOut;
@@ -35,6 +29,7 @@ public class handTest {
     void teardown(){
         System.setOut(originalOut);
     }
+
     @Test
     void displayValue_singleValueTest(){
         hand.displayValue(testHand("A","2","9"));
@@ -82,7 +77,6 @@ public class handTest {
     @Test
     void showOne_Test(){
         ArrayList<String> dealerHand = testHand("5","6");
-        ArrayList<String> playerHand = testHand("J","A");
         hand.showOne(dealerHand);
         String output = out.toString();
         assertTrue(output.contains("Dealer is showing a 5"),output);

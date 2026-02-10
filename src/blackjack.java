@@ -2,203 +2,207 @@ import java.util.ArrayList;
 
 import java.util.Scanner;
 
-
 // I hope nobody has to read this code
-
 public class blackjack {
     public static Scanner scan = new Scanner(System.in);
     public static Player player = new Player(1000);
     public static ArrayList<String> dealerHand = new ArrayList<>();
     public static ArrayList<String> deck = Deck.makeDeck();
-    public static Hand Hand = new Hand();
-    public static boolean doubleFlag = true;
-    public static boolean playGame = true;
-     static void main(String[] args) {
+    public static Hand HandHelper = new Hand();
+    public static boolean runGame = true;
 
-        System.out.println("Would you like to play blackjack? (Type Y to play, N to exit)");
+     public static void main(String[] args) {
 
-        while (playGame) {
-            String input = scan.nextLine();
+        System.out.println("Would you like to play blackjack? (Type Y to play, N to exit)"); // prompt user
 
-            if ("y".equalsIgnoreCase(input)) {
+        while (player.getBalance()>=1 && runGame) { // while player balance has at least 1 dollar and runGame flag true
 
+            String input = scan.nextLine(); // scan for input, trimming excess whitespace
+
+            if ("y".equalsIgnoreCase(input)) { // if yes, setup bet
                 setupBet();
-            } else if ("n".equalsIgnoreCase(input)) {
+            } else if ("n".equalsIgnoreCase(input)) { // if no, exit with setting runGame flag false
                 System.out.println("You entered No, exiting blackjack program.");
-                playGame = false;
+                runGame = false;
+            } else {
+                System.out.println("Enter Y or N"); // if bad input prompt user again
             }
         }
-        return;
-    }
-
+     }
+     // setupBet method handles user bet input
     public static void setupBet() {
-        if ( player.getBalance()<=0) {
+
+        if (player.getBalance()<1) { // if user is broke, return to exit game
             System.out.println("You have $0 left, no more bets can be placed.");
-            playGame = false;
+            runGame = false;
             return;
         }
-        int num;
-        try {
-            player.displayBalance();
-            System.out.println("Enter your bet amount as an integer or enter X to exit.");
-            while (true) {
-                if(!playGame){ return; }
-                String input = scan.nextLine();
+            player.displayBalance(); // display balance,and prompt user for bet
+            System.out.println("Enter your bet amount as a whole dollar amount or N to exit");
 
-                if ("x".equalsIgnoreCase(input)) {
-                    System.out.println("You entered X, exiting blackjack program.");
-                    playGame = false;
+            String inputError = "You must enter a whole dollar amount of at least 1, and no more than " + player.getBalance()+"\nEnter bet again"; // error message for bad input
+
+            while (runGame) {
+                int num; // int to hold input for bet
+                String input = scan.nextLine().trim();
+                if(input.equalsIgnoreCase("n")){
+                    runGame = false;
                     return;
                 }
-                num = Integer.parseInt(input);
-                if (num < 1 || num > player.getBalance()) {
-                    System.out.println("You must enter an integer value of at least 1, and no more than " + player.getBalance());
-
-                    return;
-
+                try { // parseInt can cause exceptions in many cases, wrap in try/catch blocks to handle errors
+                    num = Integer.parseInt(input);
                 }
-                if (num >= 1 && num <= player.getBalance()) {
-                     player.placeBet(num);
-                    dealCards();
+                catch (NumberFormatException e) {
+                    System.out.println(inputError); // if bad input output error msg
+                    continue;
                 }
+                if (num < 1 || num > player.getBalance()) { // valid integer, but either negative or > balance
+                    System.out.println(inputError); // give error message
+                    continue;
+                }
+                     System.out.println("You bet $"+num);
+                     player.placeBet(num); // handle correctly inputted player bet
+                     dealCards(); // begin first card dealing
+                     return;
             }
-
-        } catch (NumberFormatException e) {
-            System.out.println("You must enter an integer value of at least 1, and no more than " + player.getBalance());
-
-            setupBet();
         }
-    }
 
+    // Deals first round of cards, alternating cards between player and dealer
     public static void dealCards() {
-
+        deck = Deck.makeDeck(); // make a deck (6 decks * 52 cards/deck)
+        // deal initial 2 cards to player and dealer
         player.hand.add(Deck.dealCard(deck));
         dealerHand.add(Deck.dealCard(deck));
         player.hand.add(Deck.dealCard(deck));
         dealerHand.add(Deck.dealCard(deck));
-        Hand.showPlayerHand(player.hand);
-        Hand.displayValue(player.hand);
-        Hand.showOne(dealerHand);
+        int playerValue = HandHelper.getValue(player.hand);
+        displayHelper(true);
+        HandHelper.showOne(dealerHand); // show dealer's first card
 
-        if(Hand.getValue(player.hand)==21){
-
-            System.out.println("You got Blackjack!");
-            endGame();
+        if(playerValue==21){ // if player has 21 from first deal
+            endGame(); // go to endGame method to finish dealer turn and determine winner
+            return;
         }
-        gameLoop();
+        gameLoop(); // go to gameLoop if player has cards with score < 21
     }
 
+    // main loop to handle gameplay loop of hit/stand/double
     public static void gameLoop() {
-        String input;
-        if(player.balance< player.bet){
-            doubleFlag = false;
-        }
-        while (true) {
-        if (doubleFlag) {
-            System.out.println("Would you like to Hit/Stand/Double Down? Enter H/S/D");
-        } else {
-            System.out.println("Would you like to Hit/Stand? Enter H/S");
-        }
-            input = scan.nextLine();
-            if ("h".equalsIgnoreCase(input)) {
-                player.hand.add(Deck.dealCard(deck));
-                if(Hand.getValue((player.hand))==21){
-                    Hand.showPlayerHand(player.hand);
-                    Hand.displayValue(player.hand);
-                    System.out.println("You got Blackjack!");
-                    endGame();
 
-                }
-                if (Hand.getValue(player.hand) > 21) {
-                    Hand.showPlayerHand(player.hand);
-                    Hand.displayValue(player.hand);
-                    System.out.println("You busted.");
-                    Hand.showDealerHand(dealerHand);
-                    Hand.displayValue(dealerHand);
-                    resetGame();
-                }
-                Hand.showPlayerHand(player.hand);
-                Hand.displayValue(player.hand);
-                gameLoop();
+        while (runGame) {
 
+           boolean doubleFlag = player.getBalance()>=player.getBet();
+           // player can only double down on first hit and if they have enough balance to double their already placed bet
+           System.out.println("Please enter "+(doubleFlag ? "H/S/D to Hit/Stand/Double Down" : "H/S to Hit/Stand")); // prompt user based on flag above
+           String input = scan.nextLine().trim();
+
+            if ("h".equalsIgnoreCase(input)) { // h or H input - deal 1 card to player
+                player.hand.add(Deck.dealCard(deck)); // deal card
+                int playerValue = HandHelper.getValue(player.hand); // get total score of player's cards
+                displayHelper(true);
+
+                if (playerValue >= 21) { // if player busts or blackjack go to endGame()
+                    endGame(); // if player busts or has 21, player cannot hit make more moves go to endgame sequence
+                    resetGame();// after returning from endgame go to resetGame
+                    return;
+                }
+                continue;
             }
+
             if ("s".equalsIgnoreCase(input)) {
-                endGame();
-                break;
+                endGame(); // endgame sequence if player stands
+                resetGame();// after returning from endgame go to resetGame
+                return;
             }
-            if ("d".equalsIgnoreCase(input) && (doubleFlag)) {
-
-                doubleFlag = false;
-                player.doubleDown();
-                player.hand.add((Deck.dealCard(deck)));
-                Hand.showPlayerHand(player.hand);
-                Hand.displayValue(player.hand);
-                endGame();
-                break;
+            if ("d".equalsIgnoreCase(input) && (doubleFlag)) { // if player can double down
+                player.doubleDown(); // correct player balance+bet
+                player.hand.add((Deck.dealCard(deck))); //deal last card
+                System.out.println("Doubling down! Your last card is a "+player.hand.getLast());
+                displayHelper(true);
+                endGame(); // go to endgame sequence
+                resetGame(); // after returning from endgame go to resetGame
+                return;
+            }
+            System.out.println("Invalid input"); // if bad input given let user know
             }
         }
-    }
 
+        // method endGame() finishes dealer's turn, determines win/loss/draw
     public static void endGame() {
+        int playerValue = HandHelper.getValue(player.hand); // total score player's hands
+        int dealerValue = HandHelper.getValue(dealerHand); // total score dealer's hand
 
-        while (Hand.getValue(dealerHand) < 17) {
-
-            dealerHand.add(Deck.dealCard(deck));
-
-
+        if(playerValue > 21) { // if player score > 21 they bust
+            System.out.println("You busted.");
+            System.out.println("Dealer revealing second card"); // display dealer cards then return
+            displayHelper(false);
+            return;
         }
-        if (Hand.getValue(dealerHand) > 21) {
-            Hand.showDealerHand(dealerHand);
-            System.out.println("Dealer busts. You win $" + 2 * player.bet);
-            player.updateWinnings();
-            resetGame();
+
+        System.out.println("Dealer revealing second card"); // if no player bust, reveal dealer 2nd card
+        displayHelper(false);
+
+        if(dealerValue<17) { // if dealer score < 17 dealer must hit, update scores/display
+            System.out.println("Dealer hitting...");
+            while (dealerValue < 17) {
+                dealerHand.add(Deck.dealCard(deck));
+                dealerValue = HandHelper.getValue(dealerHand);
+            }
+        displayHelper(false);
         }
-            if (Hand.getValue(dealerHand) > Hand.getValue(player.hand)) {
-                Hand.showDealerHand(dealerHand);
-                Hand.displayValue(dealerHand);
-                System.out.println("Dealer wins");
 
-                resetGame();
-
-            }
-            else if (Hand.getValue(dealerHand) < Hand.getValue(player.hand)) {
-                Hand.showDealerHand(dealerHand);
-                Hand.displayValue(dealerHand);
-                System.out.println("You win $"+ 2*player.bet);
-                player.updateWinnings();
-                resetGame();
-
-            }
-            else if (Hand.getValue(player.hand)==Hand.getValue(dealerHand)){
-                Hand.showDealerHand(dealerHand);
-                Hand.displayValue(dealerHand);
-                System.out.println("Draw");
-                player.balance+=player.bet;
-                resetGame();
+        if (dealerValue > 21) {
+            System.out.println("Dealer busts. You win $" +2*player.getBet()); // if dealer busts player wins
+            player.win(); // updates player balance
+        }
+        else if(dealerValue > playerValue) { // if dealer wins, player wins nothing bet is lost
+            System.out.println("Dealer wins");
+        }
+        else if(playerValue > dealerValue) { // if neither player/dealer bust, but player > dealer
+            System.out.println("You win $"+ 2*player.getBet()); // player wins 2 * bet
+            player.win(); // update player balance
+        } else {
+                System.out.println("Push/Draw"); // else both scores must be equal
+                player.push(); // player gets their original bet returned
             }
     }
-
+    // handle resetting game after winner decided
     public static void resetGame() {
+        // reset all necessary values, clearing hands and deck
         player.bet = 0;
         dealerHand.clear();
         player.hand.clear();
-        doubleFlag = true;
         deck.clear();
-        player.displayBalance();
-        System.out.println("Would you like to play again? (Type Y to play, N to exit)");
-        while (true) {
+        System.out.println("Would you like to play again? (Type Y to play, N to exit)"); // prompt user
 
-            if(!playGame){ return; }
-
-            String input = scan.nextLine();
-
-            if ("y".equalsIgnoreCase(input)) {
-                deck = Deck.makeDeck();
+        while (runGame) {
+            String input = scan.nextLine().trim();
+            
+            if ("y".equalsIgnoreCase(input)) { // if user wants to play again back to setupBet()
+                System.out.println("You entered Yes, setting up game...");
                 setupBet();
-            } else if ("n".equalsIgnoreCase(input)) {
+                return;
+            } else if ("n".equalsIgnoreCase(input)) { // else if No, set runGame flag to false and return
                 System.out.println("You entered No, exiting blackjack program.");
-                playGame = false;
+                runGame = false;
+                return;
+            }
+            else {
+                System.out.println("Please enter Y or N"); // if bad input prompt user again
             }
         }
     }
+
+        // helper method to reduce repetition - takes boolean param, 1=player, 0=dealer
+        // calls HandHelper methods which uses various print statements
+        public static void displayHelper(boolean flag){
+            if(flag){
+                HandHelper.showPlayerHand(player.hand);
+                HandHelper.displayValue(player.hand);
+            }
+            else {
+                HandHelper.showDealerHand(dealerHand);
+                HandHelper.displayValue(dealerHand);
+            }
+        }
 }

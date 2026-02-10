@@ -1,14 +1,15 @@
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-public class blackjackTest {
+public class BlackjackTest {
 
 private InputStream oldInput;
 private PrintStream oldOutput;
@@ -17,40 +18,51 @@ private final ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     @BeforeEach
     void setup() {
-
         oldInput = System.in;
         oldOutput = System.out;
         System.setOut(new PrintStream(out));
         out.reset();
-
-        blackjack.playGame = true;
+        blackjack.runGame = true;
         blackjack.scan = new Scanner(System.in);
         blackjack.player = new Player(1000);
         blackjack.dealerHand = new ArrayList<>();
         blackjack.deck = Deck.makeDeck();
-        blackjack.Hand = new Hand();
-        blackjack.doubleFlag = true;
+        blackjack.HandHelper = new Hand();
     }
 
     @AfterEach
     void teardown(){
-
         System.setIn(oldInput);
         System.setOut(oldOutput);
     }
 
     private void giveInput(String str){
-
         System.setIn(new ByteArrayInputStream(str.getBytes()));
         blackjack.scan = new Scanner(System.in);
+    }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "zzz\n-1\nn\n","y\n100\nzzz\nh\ns\nn\n",
+            "y\n100\nd\nn\n", "y\n999\nzzz\nd\ns\nn\n",
+            "'   '\n???\nn\n", "y\n300\nh\nh\nh\nh\nn\nn\n",
+            "y\n100\ns\nz\nz\n0000\n....\nh\ns\nn\n",
+            "y\n100\nh\nh\nh\nh\naaaa\n1111\nn\n",
+            "y\n100\nd\nd\nd\nn\n", "y\n100\nd\nn\n",
+            "n\n", "34345\n!!!!\nn\n", "y\n100\nh\ns\nn\n",
+            "y\n1001\n-10000\n0\nhello\n100\ns\nn\n",
+            "y\n100\ns\nn\n","y\n4354350435093095\ns\nn\n","y\n100\ns\nn\n",
+            "y\n100\ns\nn\n","y\n5b5\ns\nn\n","y\nbbb1000\ns\nn\n"
+    })
+    void randomInputTest(String input){ // test no exeptions are thrown with messy input
+        giveInput(input);
+        assertDoesNotThrow(()->blackjack.main((new String[]{})));
     }
 
     @Test
     void EmptyBalanceTest(){
         blackjack.player.balance = 0;
         blackjack.setupBet();
-        assertFalse(blackjack.playGame, "Expected false if balance 0");
         String sysOut = out.toString();
         assertTrue(sysOut.contains("You have $0 left, no more bets can be placed."), sysOut);
     }
@@ -68,17 +80,12 @@ private final ByteArrayOutputStream out = new ByteArrayOutputStream();
         blackjack.dealerHand.add("5");
         blackjack.dealerHand.add("K");
 
-        giveInput("n\n");
         blackjack.endGame();
 
         assertEquals(300, blackjack.player.balance, "Dealer bust, player wins, balance expected = 300");
-        assertFalse(blackjack.playGame, "N is given at end of game to return/exit, expected false");
         String sysOut = out.toString();
         assertTrue(sysOut.contains("Dealer busts"),sysOut);
-
-
     }
-
 
     @Test
     void dealerWinTest(){
@@ -93,14 +100,11 @@ private final ByteArrayOutputStream out = new ByteArrayOutputStream();
         blackjack.dealerHand.add("5");
         blackjack.dealerHand.add("6");
 
-        giveInput("n\n");
         blackjack.endGame();
 
         assertEquals(100, blackjack.player.balance, "Dealer win, player loses, balance expected = 100");
-        assertFalse(blackjack.playGame, "N is given at end of game to return/exit, expected false");
         String sysOut = out.toString();
         assertTrue(sysOut.contains("Dealer wins"),sysOut);
-
     }
 
     @Test
@@ -117,19 +121,14 @@ private final ByteArrayOutputStream out = new ByteArrayOutputStream();
         blackjack.dealerHand.add("5");
         blackjack.dealerHand.add("5");
 
-        giveInput("n\n");
-
         blackjack.endGame();
         assertEquals(100, blackjack.player.balance, "Player busts, balance expected = 100");
-        assertFalse(blackjack.playGame, "N is given at end of game to return/exit, expected false");
         String sysOut = out.toString();
         assertTrue(sysOut.contains("You busted"),sysOut);
-
-
     }
 
     @Test
-    void playerBlackJackTest(){
+    void player21Test(){
 
         blackjack.player.bet = 100;
         blackjack.player.balance = 100;
@@ -141,15 +140,10 @@ private final ByteArrayOutputStream out = new ByteArrayOutputStream();
         blackjack.dealerHand.add("5");
         blackjack.dealerHand.add("5");
 
-        giveInput("n\n");
-
         blackjack.endGame();
-        assertEquals(300, blackjack.player.balance, "Player wins with blackjack (21), balance expected = 300");
-        assertFalse(blackjack.playGame, "N is given at end of game to return/exit, expected false");
+        assertEquals(300, blackjack.player.balance, "Player wins 21, balance expected = 300");
         String sysOut = out.toString();
-        assertTrue(sysOut.contains("You got Blackjack"),sysOut);
-
-
+        assertTrue(sysOut.contains("You win"));
     }
 
     @Test
@@ -161,66 +155,64 @@ private final ByteArrayOutputStream out = new ByteArrayOutputStream();
         blackjack.player.hand.add("10");
         blackjack.player.hand.add("8");
 
-
         blackjack.dealerHand.add("10");
         blackjack.dealerHand.add("8");
 
-        giveInput("n\n");
-
         blackjack.endGame();
         assertEquals(200, blackjack.player.balance, "Player busts, balance expected = 200");
-        assertFalse(blackjack.playGame, "N is given at end of game to return/exit, expected false");
         String sysOut = out.toString();
-        assertTrue(sysOut.contains("Draw"),sysOut);
-
+        assertTrue(sysOut.contains("Push/Draw"),sysOut);
     }
 
     @Test
-    void replayTest(){
 
+    void noReplayTest(){
         blackjack.player.bet = 100;
         blackjack.player.balance = 100;
+        blackjack.player.hand.add("K");
+        blackjack.player.hand.add("K");
 
-
-        giveInput("y\nx\n");
+        giveInput("n\n");
 
         blackjack.resetGame();
-        assertTrue(blackjack.playGame, "Y is given at end of game to play again, expected true");
+        assertFalse(blackjack.runGame, "Y is given at end of game to play again, expected true");
         assertEquals(0, blackjack.player.bet, "Bet should be zero after exit");
-        assertEquals(0, blackjack.player.hand.size(), "Player should have no cards upon exit");
-
+        assertEquals(0, blackjack.player.hand.size(), "Player hand should be empty when resetting");
+        assertEquals(0,blackjack.dealerHand.size(), "Dealer hand should be empty when resetting");
+        assertEquals(0,blackjack.deck.size(), "Deck should be cleared and size 0");
         String sysOut = out.toString();
         assertTrue(sysOut.contains("Would you like to play again"),sysOut);
-        assertTrue(sysOut.contains("Enter your bet"),sysOut);
-    }
-    @Test
-    void badBetAlphabetTest(){
-
-
-        giveInput("abc\nx\n");
-        blackjack.setupBet();
-        assertEquals(0, blackjack.player.bet, "Bet should be zeor after exit");
-
-        String sysOut = out.toString();
-
-
-        assertTrue(sysOut.contains("You must enter an integer"), "Enter bad bet amount");
-        assertFalse(blackjack.playGame);
     }
 
     @Test
-    void badBetNumTest(){
+    void yesReplayTest(){
+        blackjack.player.bet = 100;
+        blackjack.player.balance = 100;
+        blackjack.player.hand.add("K");
+        blackjack.player.hand.add("K");
 
+        giveInput("y\n25\ns\nn\n");
 
-        giveInput("-1\nx\n");
-        blackjack.setupBet();
+        blackjack.resetGame();
+        assertTrue(blackjack.player.balance == 75 || blackjack.player.balance == 125 || blackjack.player.balance == 100);
         assertEquals(0, blackjack.player.bet, "Bet should be zero after exit");
-
+        assertTrue(blackjack.player.hand.isEmpty(), "After replay, hand should be empty");
+        assertTrue(blackjack.dealerHand.isEmpty(), "After replay, hand should be empty");
+        assertTrue(blackjack.deck.isEmpty(), "After replay of game, deck should be empty");
         String sysOut = out.toString();
-
-
-        assertTrue(sysOut.contains("You must enter an integer"), "Enter bad bet amount");
-        assertFalse(blackjack.playGame);
+        assertTrue(sysOut.contains("Would you like to play again"),sysOut);
+        assertTrue(sysOut.contains("You bet $25"),sysOut);
+        assertTrue(sysOut.contains("Dealer revealing second card"));
     }
 
+    @Test
+    void badInputTest(){
+        blackjack.player.balance = 500;
+        giveInput("abc\n-1\n10000\n'  '\n100\ns\nn\n");
+        blackjack.setupBet();
+        assertEquals(0, blackjack.player.bet, "Bet should be zero after bad inputs -> good input -> end game");
+        String sysOut = out.toString();
+        assertTrue(sysOut.contains("You must enter a whole dollar amount"), sysOut);
+        assertTrue(sysOut.contains("You bet $100"), sysOut);
+    }
 }
